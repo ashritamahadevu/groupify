@@ -1,13 +1,13 @@
 class Student {
-    private String name;
+    private String studentName;
     private String learningStyle;
     private int projectGrade;
     private int assessmentGrade;
     private String characteristics;
     private String gender;
 
-    public Student(String name, String learningStyle, int projectGrade, int assessmentGrade, String characteristics, String gender) {
-        this.name = name;
+    public Student(String studentName, String learningStyle, int projectGrade, int assessmentGrade, String characteristics, String gender) {
+        this.studentName = studentName;
         this.learningStyle = learningStyle;
         this.projectGrade = projectGrade;
         this.assessmentGrade = assessmentGrade;
@@ -15,8 +15,8 @@ class Student {
         this.gender = gender;
     }
 
-    public String getName() {
-        return name;
+    public String getStudentName() {
+        return studentName;
     }
 
     public String getLearningStyle() {
@@ -35,13 +35,12 @@ class Student {
         return characteristics;
     }
 
-    public String getGender(){
+    public String getGender() {
         return gender;
     }
-    // Optional: Override toString() for easy printing
-    @Override
+
     public String toString() {
-        return "Name: " + name + ", Learning Style: " + learningStyle + ", Project Grade: " + projectGrade +
-                ", Assessment Grade: " + assessmentGrade + ", Characteristics: " + characteristics + ", Gender: " + gender;
+        return "Student{" +
+                "studentName='" + studentName + '\'' + ", learningStyle='" + learningStyle + '\'' + ", projectGrade=" + projectGrade + ", assessmentGrade=" + assessmentGrade + ", characteristics='" + characteristics + '\'' + ", gender='" + gender + '\'' +   '}';
     }
 }
