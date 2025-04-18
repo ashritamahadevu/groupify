@@ -3,102 +3,112 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Main {
-
     public static void main(String[] args) {
         Map<String, Student> studentMap = new HashMap<>();
-        Scanner fin = null;
-
+        //reads in the file
+        Scanner fileScanner = null;
         try {
-            File file = new File("dataBravo.txt");
-            fin = new Scanner(file);
+            fileScanner = new Scanner(new File("dataBravo.txt"));
+            while (fileScanner.hasNextLine()) {
+                String line = fileScanner.nextLine();
+                String[] infoArray = line.split("\\s+");
 
-            while (fin.hasNextLine()) {
-                String line = fin.nextLine();
-                String[] factor = line.split("\\s+");
+                if (infoArray.length == 6) {
+                    //each component of the student set as a variable
+                    String studentName = infoArray[0];
+                    String learningStyle = infoArray[1];
+                    int projectGrade = Integer.parseInt(infoArray[2]);
+                    int assessmentGrade = Integer.parseInt(infoArray[3]);
+                    String characteristics = infoArray[4];
+                    String gender = infoArray[5];
 
-                if (factor.length == 6) {
-                    String studentName = factor[0];
-                    String learningStyle = factor[1];
-                    try {
-                        int projectGrade = Integer.parseInt(factor[2]);
-                        int assessmentGrade = Integer.parseInt(factor[3]);
-                        String characteristics = factor[4];
-                        String gender = factor[5];
-                        Student student = new Student(studentName, learningStyle, projectGrade, assessmentGrade, characteristics, gender);
-                        studentMap.put(studentName, student);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: Invalid grade format in line: " + line);
-                    }
+                    //creates student object that inputs the chacteristics from the file
+                    Student student = new Student(studentName, learningStyle, projectGrade, assessmentGrade, characteristics, gender);
+                    studentMap.put(studentName, student);
                 } else {
-                    System.err.println("Error: Invalid data format in line: " + line);
+                    System.out.println("Invalid data format in line: " + line);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found.");
+        } finally {
+            if (fileScanner != null) {
+                fileScanner.close();
+            }
+        }
+
+        List<Student> studentList = new ArrayList<>(studentMap.values());
+
+        createStudentGroups(studentList);
+    }
+    //this function takes the list of students and creates groups based on what the user inputs
+    public static void createStudentGroups(List<Student> students) {
+        Scanner inputScanner = new Scanner(System.in);
+        System.out.println("How many groups do you want to create?");
+        int numberOfGroups = inputScanner.nextInt();
+
+        System.out.println("Choose a priority for sorting: 1 = Project Grade, 2 = Assessment Grade");
+        int sortChoice = inputScanner.nextInt();
+
+        //the list is sorted from lowest to highest based on what the user chose to sort based of
+        if (sortChoice == 1) {
+            students.sort((a, b) -> b.getProjectGrade() - a.getProjectGrade());
+        } else if (sortChoice == 2) {
+            students.sort((a, b) -> b.getAssessmentGrade() - a.getAssessmentGrade());
+        }
+        //creates a list of the groups, each inner list represents one group
+        List<List<Student>> groups = new ArrayList<>();
+        //each list keeps track of how many of the characteristic is in each group
+        List<Map<String, Integer>> genderCountPerGroup = new ArrayList<>();
+        List<Map<String, Integer>> styleCountPerGroup = new ArrayList<>();
+        List<Map<String, Integer>> charCountPerGroup = new ArrayList<>();
+
+        //creates empty lists for each group and empty maps for each characteristic of each group
+        for (int i = 0; i < numberOfGroups; i++) {
+            groups.add(new ArrayList<>());
+            genderCountPerGroup.add(new HashMap<>());
+            styleCountPerGroup.add(new HashMap<>());
+            charCountPerGroup.add(new HashMap<>());
+        }
+
+        //checks each group to see what is best fit for the student
+        for (Student student : students) {
+            int bestGroupIndex = 0;
+            int smallestScore = Integer.MAX_VALUE;
+
+            //checks to see how common students characteristics are too others alr in that group
+            for (int i = 0; i < numberOfGroups; i++) {
+                //score is # of students with that characteristic are alr in the group
+                int genderScore = genderCountPerGroup.get(i).getOrDefault(student.getGender(), 0);
+                int styleScore = styleCountPerGroup.get(i).getOrDefault(student.getLearningStyle(), 0);
+                int characteristicScore = charCountPerGroup.get(i).getOrDefault(student.getCharacteristics(), 0);
+                //adds up differnt scores to create similarity score
+                int totalScore = genderScore + styleScore + characteristicScore;
+
+                //students are added to group with smallest score, where they are more unique
+                if (totalScore < smallestScore) {
+                    smallestScore = totalScore;
+                    bestGroupIndex = i;
                 }
             }
 
-
-        } catch (FileNotFoundException e) {
-            System.err.println("Error: File not found: dataBravo.txt");
-            e.printStackTrace();
-        } finally {
-            if (fin != null) {
-                fin.close();
-            }
-        }
-        groupMaker(new ArrayList<>(studentMap.values()));
-    }
-
-    public static void groupMaker(List<Student> studentList) {
-        Scanner inputScanner = new Scanner(System.in);
-        System.out.println("\nHow many groups do you want to create?");
-        int numberOfGroups = inputScanner.nextInt();
-
-        System.out.println("\nWhat factor do you want to prioritize? (Enter 1 for Project Grade, 2 for Assessment Grade):");
-        int priorityFactor = inputScanner.nextInt();
-        inputScanner.nextLine(); // Consume the newline
-
-        System.out.println("\nDo you want the groups balanced? (Enter 1 for Yes, 0 for No):");
-        int balancedInput = inputScanner.nextInt();
-        inputScanner.nextLine(); //consume the extra line
-
-        boolean balanced = (balancedInput == 1);
-
-        if (numberOfGroups <= 0) {
-            System.out.println("Please enter a positive number of groups.");
-            inputScanner.close();
-            return;
+            //student is added to that group 
+            groups.get(bestGroupIndex).add(student);
+            genderCountPerGroup.get(bestGroupIndex).put(student.getGender(), genderCountPerGroup.get(bestGroupIndex).getOrDefault(student.getGender(), 0) + 1);
+            styleCountPerGroup.get(bestGroupIndex).put(student.getLearningStyle(), styleCountPerGroup.get(bestGroupIndex).getOrDefault(student.getLearningStyle(), 0) + 1);
+            charCountPerGroup.get(bestGroupIndex).put(student.getCharacteristics(), charCountPerGroup.get(bestGroupIndex).getOrDefault(student.getCharacteristics(), 0) + 1);
         }
 
-        if (priorityFactor == 1) {
-            Collections.sort(studentList, (a, b) -> Integer.compare(b.getProjectGrade(), a.getProjectGrade()));
-        } else if (priorityFactor == 2) {
-            Collections.sort(studentList, (a, b) -> Integer.compare(b.getAssessmentGrade(), a.getAssessmentGrade()));
-        } else {
-            System.out.println("Invalid priority factor.  Defaulting to original order.");
-        }
-
-        List<List<Student>> groups = new ArrayList<>();
-        for (int i = 0; i < numberOfGroups; i++) {
-            groups.add(new ArrayList<>());
-        }
-
-        if (balanced) {
-            int groupIndex = 0;
-            for (Student student : studentList) {
-                groups.get(groupIndex).add(student);
-                groupIndex = (groupIndex + 1) % numberOfGroups;
-            }
-        } else {
-             int groupIndex = 0;
-             for(Student student: studentList){
-                groups.get(groupIndex).add(student);
-                groupIndex = (groupIndex + 1) % numberOfGroups;
-             }
-        }
-
-        System.out.println("\nGroups:");
+        System.out.println("\nGenerated Groups:");
         for (int i = 0; i < groups.size(); i++) {
             System.out.println("Group " + (i + 1) + ":");
             for (Student student : groups.get(i)) {
-                System.out.println("  " + student.getStudentName() + " - Project Grade: " + student.getProjectGrade() + ", Assessment Grade: " + student.getAssessmentGrade());
+                System.out.println("  " + student.getStudentName() +
+                        " - Project: " + student.getProjectGrade() +
+                        ", Assesment: " + student.getAssessmentGrade() +
+                        ",  " + student.getLearningStyle() +
+                        ", " + student.getCharacteristics() +
+                        ",  " + student.getGender());
             }
         }
 

@@ -6,5 +6,4 @@ Dennis	Both	63	93	E	M
 Austin	Logical	54	69	I	M
 Aariv	Creative	55	93	E	M
 Suhnai	Logical	52	70	I	F
-Kyle	None	97	96	E	M
 Archana	Both	77	87	I	F
